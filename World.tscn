@@ -1,0 +1,358 @@
+[gd_scene load_steps=19 format=2]
+
+[ext_resource path="res://Player.gd" type="Script" id=1]
+[ext_resource path="res://Health.gd" type="Script" id=2]
+[ext_resource path="res://HealRay.gd" type="Script" id=3]
+[ext_resource path="res://UI.gd" type="Script" id=4]
+[ext_resource path="res://crosshair.png" type="Texture" id=5]
+
+[sub_resource type="DynamicFontData" id=12]
+font_path = "res://DroidSans.ttf"
+
+[sub_resource type="DynamicFont" id=13]
+size = 32
+outline_size = 1
+outline_color = Color( 0, 0, 0, 1 )
+use_filter = true
+font_data = SubResource( 12 )
+
+[sub_resource type="Shader" id=8]
+code = "shader_type particles;
+
+uniform float amount : hint_range(1,1000) = 8;
+
+uniform vec3 start = vec3(0,0,0);
+uniform vec3 end = vec3(0,10,0);
+
+void vertex() {
+	float new_index = float(INDEX)/float(amount);
+	
+	TRANSFORM[3].xyz = mix(start, end, new_index);
+}"
+
+[sub_resource type="ShaderMaterial" id=9]
+shader = SubResource( 8 )
+shader_param/amount = 10.0
+shader_param/start = Vector3( 0, 0, 0 )
+shader_param/end = Vector3( 0, 10, 0 )
+
+[sub_resource type="SpatialMaterial" id=10]
+vertex_color_use_as_albedo = true
+albedo_color = Color( 0, 1, 1, 1 )
+
+[sub_resource type="SphereMesh" id=11]
+material = SubResource( 10 )
+
+[sub_resource type="SpatialMaterial" id=5]
+albedo_color = Color( 0, 0.5, 1, 1 )
+
+[sub_resource type="CubeMesh" id=1]
+
+[sub_resource type="BoxShape" id=2]
+
+[sub_resource type="BoxShape" id=3]
+extents = Vector3( 4, 4, 4 )
+
+[sub_resource type="SpatialMaterial" id=6]
+albedo_color = Color( 0, 0.501961, 0, 1 )
+
+[sub_resource type="CubeMesh" id=4]
+
+[sub_resource type="SpatialMaterial" id=14]
+albedo_color = Color( 0.38, 0.38, 0.38, 1 )
+
+[node name="World" type="Spatial"]
+
+[node name="UI" type="Control" parent="."]
+mouse_filter = 2
+script = ExtResource( 4 )
+
+[node name="Label" type="Label" parent="UI"]
+margin_right = 40.0
+margin_bottom = 14.0
+custom_fonts/font = SubResource( 13 )
+text = "Press ESCAPE to toggle first person mode."
+align = 1
+valign = 1
+
+[node name="Charge" type="Label" parent="UI"]
+margin_top = 500.0
+margin_right = 1024.0
+margin_bottom = 538.0
+custom_fonts/font = SubResource( 13 )
+text = "Charge: 0%"
+align = 1
+valign = 1
+
+[node name="Healing" type="Label" parent="UI"]
+visible = false
+margin_top = 529.0
+margin_right = 1024.0
+margin_bottom = 567.0
+custom_fonts/font = SubResource( 13 )
+text = "Healing: None"
+align = 1
+valign = 1
+
+[node name="TextureRect" type="TextureRect" parent="UI"]
+modulate = Color( 0, 0, 0, 1 )
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = 488.0
+margin_top = 276.0
+margin_right = 536.0
+margin_bottom = 324.0
+mouse_filter = 2
+texture = ExtResource( 5 )
+expand = true
+
+[node name="Player" type="KinematicBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.3, 0 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="HealRay" type="Spatial" parent="Player"]
+unique_name_in_owner = true
+script = ExtResource( 3 )
+
+[node name="Particles" type="Particles" parent="Player/HealRay"]
+visible = false
+amount = 10
+explosiveness = 1.0
+local_coords = false
+process_material = SubResource( 9 )
+draw_pass_1 = SubResource( 11 )
+
+[node name="Model" type="MeshInstance" parent="Player"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+visible = false
+material_override = SubResource( 5 )
+mesh = SubResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Player"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+shape = SubResource( 2 )
+
+[node name="Pivot" type="Position3D" parent="Player"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.30003, 0 )
+
+[node name="Camera" type="Camera" parent="Player/Pivot"]
+current = true
+fov = 90.0
+
+[node name="Teammate" type="KinematicBody" parent="." groups=["HealTargets"]]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 10.3, -39 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Health" type="Node" parent="Teammate"]
+script = ExtResource( 2 )
+health = 1.0
+
+[node name="MeshInstance" type="MeshInstance" parent="Teammate"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+material_override = SubResource( 5 )
+mesh = SubResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Teammate"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+shape = SubResource( 2 )
+
+[node name="DisplayHealth" type="Label3D" parent="Teammate"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0 )
+cast_shadow = 0
+generate_lightmap = false
+pixel_size = 0.125
+billboard = 1
+text = "0"
+font = SubResource( 13 )
+
+[node name="Teammate2" type="KinematicBody" parent="." groups=["HealTargets"]]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 10.3, -39 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Health" type="Node" parent="Teammate2"]
+script = ExtResource( 2 )
+max_health = 150.0
+health = 1.0
+
+[node name="MeshInstance" type="MeshInstance" parent="Teammate2"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+material_override = SubResource( 5 )
+mesh = SubResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Teammate2"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+shape = SubResource( 2 )
+
+[node name="DisplayHealth" type="Label3D" parent="Teammate2"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0 )
+cast_shadow = 0
+generate_lightmap = false
+pixel_size = 0.125
+billboard = 1
+text = "0"
+font = SubResource( 13 )
+
+[node name="Teammate3" type="KinematicBody" parent="." groups=["HealTargets"]]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.3, -39 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Health" type="Node" parent="Teammate3"]
+script = ExtResource( 2 )
+max_health = 175.0
+health = 1.0
+
+[node name="MeshInstance" type="MeshInstance" parent="Teammate3"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+material_override = SubResource( 5 )
+mesh = SubResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Teammate3"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+shape = SubResource( 2 )
+
+[node name="DisplayHealth" type="Label3D" parent="Teammate3"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0 )
+cast_shadow = 0
+generate_lightmap = false
+pixel_size = 0.125
+billboard = 1
+text = "0"
+font = SubResource( 13 )
+
+[node name="Teammate4" type="KinematicBody" parent="." groups=["HealTargets"]]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 10.3, -39 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Health" type="Node" parent="Teammate4"]
+script = ExtResource( 2 )
+max_health = 200.0
+health = 1.0
+
+[node name="MeshInstance" type="MeshInstance" parent="Teammate4"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+material_override = SubResource( 5 )
+mesh = SubResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Teammate4"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+shape = SubResource( 2 )
+
+[node name="DisplayHealth" type="Label3D" parent="Teammate4"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0 )
+cast_shadow = 0
+generate_lightmap = false
+pixel_size = 0.125
+billboard = 1
+text = "0"
+font = SubResource( 13 )
+
+[node name="Teammate5" type="KinematicBody" parent="." groups=["HealTargets"]]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 10.3, -39 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Health" type="Node" parent="Teammate5"]
+script = ExtResource( 2 )
+max_health = 300.0
+health = 1.0
+
+[node name="MeshInstance" type="MeshInstance" parent="Teammate5"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+material_override = SubResource( 5 )
+mesh = SubResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Teammate5"]
+transform = Transform( 4.9, 0, 0, 0, 8.3, 0, 0, 0, 4.9, 0, 0, 0 )
+shape = SubResource( 2 )
+
+[node name="DisplayHealth" type="Label3D" parent="Teammate5"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0 )
+cast_shadow = 0
+generate_lightmap = false
+pixel_size = 0.125
+billboard = 1
+text = "0"
+font = SubResource( 13 )
+
+[node name="Ground" type="StaticBody" parent="."]
+transform = Transform( 30, 0, 0, 0, 1, 0, 0, 0, 30, 0, -2, 0 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CollisionShape" type="CollisionShape" parent="Ground"]
+shape = SubResource( 3 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="MeshInstance" type="MeshInstance" parent="Ground"]
+transform = Transform( 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0 )
+material_override = SubResource( 6 )
+mesh = SubResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Wall" type="StaticBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 4, 0, 0, 0, 4, -55, 18, -39 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CollisionShape" type="CollisionShape" parent="Wall"]
+shape = SubResource( 3 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="MeshInstance" type="MeshInstance" parent="Wall"]
+transform = Transform( 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0 )
+material_override = SubResource( 14 )
+mesh = SubResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Wall2" type="StaticBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 4, 0, 0, 0, 4, 55, 18, -39 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="CollisionShape" type="CollisionShape" parent="Wall2"]
+shape = SubResource( 3 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="MeshInstance" type="MeshInstance" parent="Wall2"]
+transform = Transform( 4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0 )
+material_override = SubResource( 14 )
+mesh = SubResource( 4 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 30, 0 )
+shadow_enabled = true
